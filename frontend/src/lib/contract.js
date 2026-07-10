@@ -1,8 +1,8 @@
 import { createClient } from 'genlayer-js';
 import { testnetBradbury } from 'genlayer-js/chains';
 
-export const CONTRACT_ADDRESS = '0x27eFa1bCDF309A0C513dE4b7009e23CeAf714906';
-export const DEPLOY_TX = '0xab39adbb8c4d434345dea0dad9e521b3ded4938779533af5b7c06002ce7d8819';
+export const CONTRACT_ADDRESS = '0x8F68d783cd3434A07bA32aAf97728D2A3707914B';
+export const DEPLOY_TX = '0x25fe472f68d588e043f1e617c23ee70f6c02ee292f14a6e39269cf2a4e3b5d5d';
 export const EXPLORER = 'https://explorer-bradbury.genlayer.com';
 export const FAUCET = 'https://testnet-faucet.genlayer.foundation/';
 export const NETWORK_NAME = 'Bradbury';

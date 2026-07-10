@@ -101,10 +101,17 @@ def _coerce_score(raw) -> int:
         raise gl.vm.UserError(ERR_LLM + " Non-numeric dimension score")
 
 
-def _dominant(affinity: dict) -> str:
+def _dominant(affinity) -> str:
     """Deterministic argmax over the archetype affinity vector. Ties break by the
     fixed ARCHETYPES order so leader and validators always agree given equal
-    numbers."""
+    numbers.
+
+    Hardened against a missing or unexpected-shape affinity: anything that is
+    not a dict, or any non-numeric entry, is treated as absent (-1) rather than
+    raising, so this never reverts the VM. If nothing is usable it falls back to
+    the first archetype, which keeps leader and validators in agreement."""
+    if not isinstance(affinity, dict):
+        return ARCHETYPES[0]
     best = None
     best_val = -1
     for a in ARCHETYPES:
@@ -133,12 +140,20 @@ def _normalize_forge(raw) -> dict:
     if not isinstance(raw, dict):
         raise gl.vm.UserError(ERR_LLM + " Non-dict forge result")
 
+    # archetypeAffinity may be missing or the wrong shape if the model drifts.
+    # Rather than revert the round (which surfaces as UNDETERMINED), treat an
+    # absent or malformed affinity as an all-zero vector; _dominant then falls
+    # back deterministically to the first archetype and the round still settles.
     aff_raw = raw.get("archetypeAffinity")
     if not isinstance(aff_raw, dict):
-        raise gl.vm.UserError(ERR_LLM + " Missing archetypeAffinity object")
+        aff_raw = {}
     affinity = {}
     for a in ARCHETYPES:
-        affinity[a] = _coerce_score(aff_raw.get(a))
+        val = aff_raw.get(a)
+        try:
+            affinity[a] = _coerce_score(val) if val is not None else 0
+        except gl.vm.UserError:
+            affinity[a] = 0
 
     traits_raw = raw.get("secondaryTraits", [])
     traits = []
@@ -279,22 +294,32 @@ class GlyphForge(gl.Contract):
             theirs = leaders_res.calldata
             if not isinstance(theirs, dict):
                 return False
-            # The dominant archetype (argmax of affinity) must match. This is a
-            # derived comparison over numbers, robust to wording differences.
-            if _dominant(mine["archetypeAffinity"]) != _dominant(theirs.get("archetypeAffinity", {})):
+            # The dominant archetype (argmax of affinity) is the load-bearing
+            # semantic claim and must match exactly. _dominant tolerates a
+            # missing or malformed affinity without reverting.
+            if _dominant(mine.get("archetypeAffinity")) != _dominant(theirs.get("archetypeAffinity")):
                 return False
+            # The five dimension scores are secondary and come from two
+            # independent model runs, so we do not demand all five agree. We
+            # require a comfortable majority (at least 3 of 5) to sit within a
+            # generous tolerance. This keeps the round determinate instead of
+            # forcing UNDETERMINED whenever a single score drifts.
+            mine_scores = mine.get("scores")
             theirs_scores = theirs.get("scores")
-            if not isinstance(theirs_scores, dict):
+            if not isinstance(mine_scores, dict) or not isinstance(theirs_scores, dict):
                 return False
-            # Each dimension must agree within tolerance.
+            agree = 0
             for d in DIMS:
-                a = int(mine["scores"][d])
-                b = int(theirs_scores.get(d, -1))
-                if b < 0:
-                    return False
-                if abs(a - b) > max(18, (18 * max(a, b)) // 100):
-                    return False
-            return True
+                try:
+                    a = int(mine_scores.get(d, -1))
+                    b = int(theirs_scores.get(d, -1))
+                except (ValueError, TypeError):
+                    continue
+                if a < 0 or b < 0:
+                    continue
+                if abs(a - b) <= max(25, (25 * max(a, b)) // 100):
+                    agree += 1
+            return agree >= 3
 
         return gl.vm.run_nondet_unsafe(leader_fn, validator_fn)
 

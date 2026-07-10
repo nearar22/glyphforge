@@ -186,7 +186,7 @@ heuristic; the authoritative tensions are the ones the jury returns on-chain.
 
 The deployed contract is the authoritative source, verifiable on the explorer:
 
-- Contract: [`0x27eFa1bCDF309A0C513dE4b7009e23CeAf714906`](https://explorer-bradbury.genlayer.com/address/0x27eFa1bCDF309A0C513dE4b7009e23CeAf714906)
-- Deploy transaction: [`0xab39adbb8c4d434345dea0dad9e521b3ded4938779533af5b7c06002ce7d8819`](https://explorer-bradbury.genlayer.com/tx/0xab39adbb8c4d434345dea0dad9e521b3ded4938779533af5b7c06002ce7d8819)
+- Contract: [`0x8F68d783cd3434A07bA32aAf97728D2A3707914B`](https://explorer-bradbury.genlayer.com/address/0x8F68d783cd3434A07bA32aAf97728D2A3707914B)
+- Deploy transaction: [`0x25fe472f68d588e043f1e617c23ee70f6c02ee292f14a6e39269cf2a4e3b5d5d`](https://explorer-bradbury.genlayer.com/tx/0x25fe472f68d588e043f1e617c23ee70f6c02ee292f14a6e39269cf2a4e3b5d5d)
 
 The full backend is `contracts/contract.py` in this repository.

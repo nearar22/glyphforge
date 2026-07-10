@@ -35,7 +35,7 @@ entry = {
     "readmeShape": "codex / lexicon (the system defined one term at a time, smallest unit up to the consensus)",
     "repo": "https://github.com/nearar22/glyphforge",
     "live": "",
-    "contract": "0x27eFa1bCDF309A0C513dE4b7009e23CeAf714906",
+    "contract": "0x8F68d783cd3434A07bA32aAf97728D2A3707914B",
 }
 
 print("description length:", len(description))
